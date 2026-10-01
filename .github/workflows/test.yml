@@ -11,7 +11,7 @@ jobs:
           POSTGRES_PASSWORD: synthetic-ci-password
           POSTGRES_DB: forvalta
         ports: ['5432:5432']
-        options: --health-cmd 'pg_isready -U forvalta' --health-interval 5s --health-timeout 5s --health-retries 10
+        options: --health-cmd "pg_isready -U forvalta" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DEBUG: '1'
       MFA_REQUIRED: '0'

@@ -16,3 +16,36 @@ jobs:
       - name: Validate proxy configuration
         if: matrix.component == 'web'
         run: docker run --rm forvalta-web:test caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Start isolated database for API smoke test
+        if: matrix.component == 'api'
+        run: |
+          docker network create forvalta-ci
+          docker run -d --name forvalta-ci-db --network forvalta-ci --network-alias db -e POSTGRES_PASSWORD=synthetic-admin-only -e APP_DB_PASSWORD=synthetic-app-only -e POSTGRES_DB=forvalta -v "$PWD/deploy/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro" postgres:18
+          for attempt in $(seq 1 30); do
+            if docker exec forvalta-ci-db pg_isready -h 127.0.0.1 -U postgres; then exit 0; fi
+            sleep 2
+          done
+          docker logs forvalta-ci-db
+          exit 1
+      - name: Test production migrations and readiness
+        if: matrix.component == 'api'
+        run: |
+          cat > /tmp/forvalta-ci.env <<'ENV'
+          DEBUG=0
+          MFA_REQUIRED=1
+          SECRET_KEY=ci-only-long-synthetic-secret-not-used-outside-disposable-test-containers
+          MFA_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          POSTGRES_HOST=db
+          POSTGRES_DB=forvalta
+          POSTGRES_USER=forvalta
+          POSTGRES_PASSWORD=synthetic-app-only
+          ALLOWED_HOSTS=localhost
+          ENV
+          docker run --rm --network forvalta-ci --env-file /tmp/forvalta-ci.env forvalta-api:test sh -c 'python manage.py migrate --noinput && python manage.py check --deploy --fail-level WARNING'
+          docker run -d --name forvalta-ci-api --network forvalta-ci --env-file /tmp/forvalta-ci.env forvalta-api:test
+          for attempt in $(seq 1 15); do
+            if docker exec forvalta-ci-api python -c "import urllib.request; req=urllib.request.Request('http://localhost:8000/api/health/',headers={'X-Forwarded-Proto':'https'}); assert urllib.request.urlopen(req,timeout=5).status==200"; then exit 0; fi
+            sleep 2
+          done
+          docker logs forvalta-ci-api
+          exit 1

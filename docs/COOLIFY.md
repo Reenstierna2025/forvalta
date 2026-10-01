@@ -9,4 +9,3 @@ Alla hemligheter i `.env.example` ska anges som privata driftvariabler i Coolify
 Migrering körs som separat engångstjänst före API och worker. De beständiga databas- och signaturvolymerna ska behållas vid uppgraderingar. Namn på projekt och volymer får inte ändras utan flyttplan.
 
 Innan användare släpps in måste pgBackRest-stanza, arkivering och första krypterade backup verifieras enligt BACKUP.md. Återställningsövning ska inkludera bilagor. Monitoring/timers i den fristående guiden använder dess Compose-fil och behöver anpassas till Coolifys arbetskatalog och genererade projektnamn; de är inte automatiskt aktiverade av denna profil. Första administratören skapas först efter lagrings- och backupkontroller.
-
