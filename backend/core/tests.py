@@ -271,3 +271,32 @@ class ReadinessTests(TestCase):
             response=self.client.get('/api/health/')
         self.assertEqual(response.status_code,503)
         self.assertNotIn('private connection information',response.content.decode())
+
+@override_settings(DEBUG=False,S3_BUCKET='',LOCAL_DOCUMENT_STORAGE=True)
+class PilotStorageTests(TestCase):
+    def test_private_local_document_survives_reopen_and_detects_corruption(self):
+        import tempfile
+        from pathlib import Path
+        from types import SimpleNamespace
+        from core.storage import put_file,read_file
+        from rest_framework.exceptions import ValidationError
+        data=b'%PDF-1.4 synthetic pilot document'
+        with tempfile.TemporaryDirectory() as directory,override_settings(MEDIA_ROOT=Path(directory)):
+            key=put_file(data)
+            doc=SimpleNamespace(file_key=key,sha256=hashlib.sha256(data).hexdigest())
+            self.assertEqual(read_file(doc),data)
+            (Path(directory)/key).write_bytes(b'changed')
+            with self.assertRaises(ValidationError):read_file(doc)
+
+    @override_settings(LOCAL_DOCUMENT_STORAGE=False)
+    def test_production_does_not_implicitly_enable_local_storage(self):
+        from core.storage import put_file
+        from rest_framework.exceptions import ValidationError
+        with self.assertRaises(ValidationError):put_file(b'test')
+
+    @override_settings(FILE_SCAN_COMMAND='')
+    def test_pilot_still_requires_upload_scanning(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from core.storage import inspect_upload
+        from rest_framework.exceptions import ValidationError
+        with self.assertRaises(ValidationError):inspect_upload(SimpleUploadedFile('test.pdf',b'%PDF-1.4 synthetic'))

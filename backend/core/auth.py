@@ -50,7 +50,7 @@ class AuthView(APIView):
     permission_classes=[AllowAny]
     def get(self,request):
         token=get_token(request)
-        return Response({'user':user_data(request._request.user) if request._request.user.is_authenticated else None,'csrf':token,'demo':settings.DEMO_MODE,'mfa_required':settings.MFA_REQUIRED,'source_url':settings.SOURCE_URL})
+        return Response({'user':user_data(request._request.user) if request._request.user.is_authenticated else None,'csrf':token,'demo':settings.DEMO_MODE,'pilot':settings.PILOT_MODE,'mfa_required':settings.MFA_REQUIRED,'source_url':settings.SOURCE_URL})
     def post(self,request):
         rate_limit(request,'login')
         user=authenticate(request,username=request.data.get('username',''),password=request.data.get('password',''))

@@ -49,3 +49,9 @@ jobs:
           done
           docker logs forvalta-ci-api
           exit 1
+      - name: Verify persistent pilot documents across containers
+        if: matrix.component == 'api'
+        run: |
+          docker volume create forvalta-ci-documents
+          docker run --rm --network forvalta-ci --env-file /tmp/forvalta-ci.env -e PILOT_MODE=1 -e LOCAL_DOCUMENT_STORAGE=1 -v forvalta-ci-documents:/app/private-media forvalta-api:test python manage.py shell -c "from core.storage import put_file; from pathlib import Path; key=put_file(b'pilot-persistence-check'); Path('/app/private-media/test-key').write_text(key)"
+          docker run --rm --network forvalta-ci --env-file /tmp/forvalta-ci.env -e PILOT_MODE=1 -e LOCAL_DOCUMENT_STORAGE=1 -v forvalta-ci-documents:/app/private-media forvalta-api:test python manage.py shell -c "from core.storage import read_file; from pathlib import Path; from types import SimpleNamespace; import hashlib; key=Path('/app/private-media/test-key').read_text(); assert read_file(SimpleNamespace(file_key=key,sha256=hashlib.sha256(b'pilot-persistence-check').hexdigest()))==b'pilot-persistence-check'"

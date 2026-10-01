@@ -488,6 +488,7 @@ function App() {
           </div>
         )}
         <main id="main">
+          {auth.pilot && <p className="info-box" role="status">Testmiljö · Använd endast testdata. Data sparas på servern; extern säkerhetskopiering och e-post är inte aktiverade.</p>}
           {error && (
             <div role="alert" className="alert">
               <AlertCircle size={18} />
@@ -3364,6 +3365,7 @@ function Login({ auth, done }: { auth: Row; done: (a: Row) => void }) {
       </div>
       <div className="login-card">
         <span className="eyebrow">FASTIGHETSFÖRVALTNING</span>{auth.sessionExpired&&<p role="status" className="info-box">Din tidigare inloggning har återkallats. Logga in igen om du fortfarande har åtkomst.</p>}
+        {auth.pilot && <p className="info-box" role="status">Testmiljö · Förvalta by Reenstierna. Använd endast testdata.</p>}
         <h1>{mfa ? "Verifiera din inloggning" : "Välkommen tillbaka"}</h1>
         <p>
           {mfa

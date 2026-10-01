@@ -34,9 +34,12 @@ def put_file(data):
     key='documents/'+str(uuid.uuid4())
     if settings.S3_BUCKET:
         s3().put_object(Bucket=settings.S3_BUCKET,Key=key,Body=data,ContentType='application/octet-stream',ServerSideEncryption='AES256')
-    elif settings.DEBUG:
+    elif settings.DEBUG or settings.LOCAL_DOCUMENT_STORAGE:
         path=settings.MEDIA_ROOT/key; path.parent.mkdir(parents=True,exist_ok=True)
         with open(path,'xb') as f: f.write(data); f.flush(); os.fsync(f.fileno())
+        directory_fd=os.open(path.parent,os.O_RDONLY)
+        try: os.fsync(directory_fd)
+        finally: os.close(directory_fd)
     else: raise ValidationError('Privat dokumentlagring är inte konfigurerad.')
     return key
 

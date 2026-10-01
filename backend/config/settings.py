@@ -4,6 +4,8 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv('DEBUG', '0') == '1'
+PILOT_MODE = os.getenv('PILOT_MODE', '0') == '1'
+LOCAL_DOCUMENT_STORAGE = PILOT_MODE and os.getenv('LOCAL_DOCUMENT_STORAGE', '0') == '1'
 SECRET_KEY = os.getenv('SECRET_KEY', 'local-development-only' if DEBUG else '')
 if not SECRET_KEY:
     raise ImproperlyConfigured('SECRET_KEY is required')

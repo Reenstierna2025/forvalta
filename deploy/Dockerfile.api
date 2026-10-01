@@ -6,6 +6,6 @@ COPY backend/requirements.lock ./requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock
 COPY backend/ .
 COPY deploy/clamd.conf /etc/clamav/clamd.conf
-RUN useradd --uid 10001 --create-home app && mkdir -p staticfiles && chown -R app:app /app
+RUN useradd --uid 10001 --create-home app && mkdir -p staticfiles private-media && chown -R app:app /app
 USER app
 CMD ["gunicorn","config.wsgi:application","--bind","0.0.0.0:8000","--workers","3","--threads","2","--timeout","120","--access-logfile","-"]

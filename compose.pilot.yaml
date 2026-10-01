@@ -1,0 +1,160 @@
+# Small test installation in Coolify. Local persistent documents; no external backup.
+# HTTPS domain ONLY on web:80. Keep all named volumes on redeploy.
+x-app:
+  build: &id001
+    context: .
+    dockerfile: deploy/Dockerfile.api
+  environment: &id002
+    POSTGRES_HOST: db
+    SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+    MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Set MFA_ENCRYPTION_KEY}
+    AI_PRIVATE_ORIGINS: ${AI_PRIVATE_ORIGINS:-}
+    POSTGRES_DB: forvalta
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-forvalta.byreenstierna.se}
+    CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://forvalta.byreenstierna.se}
+    PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://forvalta.byreenstierna.se}
+    DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+    POSTGRES_USER: forvalta
+    DEBUG: '0'
+    MFA_REQUIRED: '1'
+    TRUST_PROXY: '1'
+    SOURCE_URL: /source/forvalta-source.tar.gz
+    FILE_SCAN_COMMAND: clamdscan --stream --config-file=/etc/clamav/clamd.conf
+    PILOT_MODE: '1'
+    LOCAL_DOCUMENT_STORAGE: '1'
+    PRIVATE_MEDIA_ROOT: /app/private-media
+    EMAIL_HOST: ''
+    EMAIL_PORT: '587'
+  restart: unless-stopped
+  depends_on: &id004
+    db:
+      condition: service_healthy
+  networks: &id003
+  - private
+services:
+  db:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: forvalta
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      APP_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/18/docker
+    command:
+    - postgres
+    - -c
+    - shared_buffers=64MB
+    - -c
+    - max_connections=40
+    volumes:
+    - database:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U postgres -d forvalta
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+    - private
+    mem_limit: 320m
+  api:
+    build: *id001
+    environment: *id002
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: *id003
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/api/health/',headers={'Host':__import__('os').environ['ALLOWED_HOSTS'].split(',')[0],'X-Forwarded-Proto':'https'});
+        urllib.request.urlopen(r,timeout=5)
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command:
+    - gunicorn
+    - config.wsgi:application
+    - --bind
+    - 0.0.0.0:8000
+    - --workers
+    - '1'
+    - --threads
+    - '2'
+    - --timeout
+    - '120'
+    - --access-logfile
+    - '-'
+    volumes:
+    - documents:/app/private-media
+    mem_limit: 320m
+  worker:
+    build: *id001
+    environment: *id002
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: *id003
+    command:
+    - python
+    - manage.py
+    - worker
+    volumes:
+    - documents:/app/private-media
+    mem_limit: 256m
+  scanner:
+    image: clamav/clamav:stable
+    volumes:
+    - signatures:/var/lib/clamav
+    restart: unless-stopped
+    networks:
+    - private
+    environment:
+      CLAMAV_NO_MILTERD: 'true'
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+      args:
+        CADDY_CONFIG: deploy/Caddyfile.coolify
+    environment:
+      DOMAIN: :80
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+    - private
+    expose:
+    - '80'
+    mem_limit: 128m
+  migrate:
+    build: *id001
+    environment: *id002
+    restart: 'no'
+    depends_on: *id004
+    networks: *id003
+    command:
+    - sh
+    - -c
+    - python manage.py migrate --noinput && python manage.py check --deploy --fail-level
+      WARNING
+    volumes:
+    - documents:/app/private-media
+volumes:
+  database: null
+  signatures: null
+  documents: null
+networks:
+  private: null
