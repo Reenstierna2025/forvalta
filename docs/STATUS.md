@@ -40,3 +40,10 @@ Piloten kan granskas lokalt nu. Det är inte ett godkännande att använda verkl
 ## Besiktningsleverans 0.6
 
 Se [besiktningsflödet](INSPECTIONS.md). Protokollen och anmärkningarna ingår i fullständig dataexport. Åtkomsten till Coolify, OVH och Strato har verifierats. Ett separat installationsutkast är förberett i Coolify. Ingen extern tjänst är startad; domän, S3, SMTP, backup och återställningsprov återstår. Containerbyggen och produktionsstart med begränsat databaskonto har klarat CI.
+
+
+## Liten testinstallation, 1 oktober 2026
+
+På beställarens önskemål finns nu `compose.pilot.yaml` för lokal, beständig dokumentlagring på befintlig server. Ingen extern S3 eller separat backup krävs för syntetiska testdata. Produktionsprofilens krav gäller fortsatt inför skarp drift. Testadress `forvalta.byreenstierna.se` är skapad hos Strato med serverns A- och AAAA-poster. Coolify använder pilotprofilen. Appen är ännu inte startad; privata driftvariabler, första användare och slutprov på servern återstår.
+
+86 backendtester och 3 frontendtester passerar. CI har byggt samtliga containrar och verifierat att en privat bilaga som skrivs i en container kan läsas med korrekt kontrollsumma i en ny container över samma volym. Detta är ett test av beständighet vid containerbyte, inte en backupövning.
