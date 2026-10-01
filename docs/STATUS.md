@@ -47,3 +47,11 @@ Se [besiktningsflödet](INSPECTIONS.md). Protokollen och anmärkningarna ingår 
 På beställarens önskemål finns nu `compose.pilot.yaml` för lokal, beständig dokumentlagring på befintlig server. Ingen extern S3 eller separat backup krävs för syntetiska testdata. Produktionsprofilens krav gäller fortsatt inför skarp drift. Testadress `forvalta.byreenstierna.se` är skapad hos Strato med serverns A- och AAAA-poster. Coolify använder pilotprofilen. Appen är ännu inte startad; privata driftvariabler, första användare och slutprov på servern återstår.
 
 86 backendtester och 3 frontendtester passerar. CI har byggt samtliga containrar och verifierat att en privat bilaga som skrivs i en container kan läsas med korrekt kontrollsumma i en ny container över samma volym. Detta är ett test av beständighet vid containerbyte, inte en backupövning.
+
+## Testmiljön publicerad, 1 oktober 2026
+
+Pilotens kodversion `26a8466` kör på https://forvalta.byreenstierna.se via Coolify/OVH. Första starten stoppades av ett tomt CSRF_TRUSTED_ORIGINS som Coolify behållit från tidigare profil. Domänvärdena korrigerades och den gamla S3-platshållaren tömdes. Därefter startade databas, migrering, API, worker, scanner och webb.
+
+Verifierat på servern: HTTPS med giltigt certifikat, HTTP-omdirigering, Noindex, hälsokontroll 200, anonym åtkomst nekad (403) till register/arbete/rapporter, DEBUG-demoinloggning av och MFA obligatorisk. Syntetisk PDF passerade ClamAV, sparades privat och lästes tillbaka med SHA-256-kontroll även i en ny process. Syntetisk databaspost skrevs och återställdes i en transaktion utan kvarvarande testpost. Tillfälliga provfiler togs bort. `ops_health` och `verify_integrity` rapporterade inga fel. Inloggningssidans dokumentbredd motsvarar 320 px viewport utan horisontell överbredd; detta ersätter inte användartest på fysisk telefon.
+
+Installationen är tom. Första administratörens konto och MFA behöver slutföras av användaren. Inloggade arbetsflöden har ännu inte provats i denna serverinstallation. E-post och separat backup är inte aktiverade; miljön är avsedd för syntetiska testdata.
