@@ -1,0 +1,107 @@
+name: forvalta
+x-app: &app
+  build:
+    context: .
+    dockerfile: deploy/Dockerfile.api
+  environment: &app-environment
+    POSTGRES_HOST: db
+    SECRET_KEY: ${SECRET_KEY}
+    MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+    AI_PRIVATE_ORIGINS: ${AI_PRIVATE_ORIGINS:-}
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+    CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS}
+    PUBLIC_ORIGIN: ${PUBLIC_ORIGIN}
+    S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+    S3_BUCKET: ${S3_BUCKET}
+    S3_REGION: ${S3_REGION}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    EMAIL_HOST: ${EMAIL_HOST}
+    EMAIL_PORT: ${EMAIL_PORT}
+    EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+    EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+    DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+    POSTGRES_USER: forvalta
+    DEBUG: "0"
+    MFA_REQUIRED: "1"
+    TRUST_PROXY: "1"
+    SOURCE_URL: /source/forvalta-source.tar.gz
+    FILE_SCAN_COMMAND: clamdscan --stream --config-file=/etc/clamav/clamd.conf
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  networks: [private]
+services:
+  db:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: forvalta
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      APP_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PGBACKREST_REPO1_S3_BUCKET: ${PGBACKREST_REPO1_S3_BUCKET}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT}
+      PGBACKREST_REPO1_S3_REGION: ${PGBACKREST_REPO1_S3_REGION}
+      PGBACKREST_REPO1_S3_URI_STYLE: ${PGBACKREST_REPO1_S3_URI_STYLE}
+      PGBACKREST_REPO1_S3_KEY: ${PGBACKREST_REPO1_S3_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${PGBACKREST_REPO1_S3_KEY_SECRET}
+      PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS}
+      PGDATA: /var/lib/postgresql/18/docker
+    command: [postgres, -c, wal_level=replica, -c, archive_mode=on, -c, archive_timeout=300, -c, "archive_command=pgbackrest --stanza=forvalta archive-push %p"]
+    volumes: [database:/var/lib/postgresql, "./deploy/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro"]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d forvalta"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [private]
+  api:
+    <<: *app
+  worker:
+    <<: *app
+    command: [python, manage.py, worker]
+  recovery:
+    <<: *app
+    profiles: [operations]
+    user: "0:0"
+    restart: "no"
+    environment:
+      <<: *app-environment
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION}
+      BACKUP_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID}
+      BACKUP_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY}
+      BACKUP_CONFIG_FILE: /run/private/configuration.env
+    volumes:
+      - ./.env:/run/private/configuration.env:ro
+  scanner:
+    image: clamav/clamav:stable
+    volumes: [signatures:/var/lib/clamav]
+    restart: unless-stopped
+    networks: [private]
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes: [caddy_data:/data, caddy_config:/config]
+    restart: unless-stopped
+    depends_on: [api]
+    networks: [private]
+volumes:
+  database:
+  signatures:
+  caddy_data:
+  caddy_config:
+networks:
+  private:

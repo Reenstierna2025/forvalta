@@ -1,0 +1,149 @@
+# Git-based Coolify deployment. Assign a HTTPS domain ONLY to web (port 80).
+# Configure external S3, SMTP and backup before deployment. No public database port.
+x-app:
+  build: &id001
+    context: .
+    dockerfile: deploy/Dockerfile.api
+  environment: &id002
+    POSTGRES_HOST: db
+    SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+    MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Set MFA_ENCRYPTION_KEY}
+    AI_PRIVATE_ORIGINS: ${AI_PRIVATE_ORIGINS:-}
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+    CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS}
+    PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+    S3_BUCKET: ${S3_BUCKET:?Set S3_BUCKET}
+    S3_REGION: ${S3_REGION}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    EMAIL_HOST: ${EMAIL_HOST}
+    EMAIL_PORT: ${EMAIL_PORT}
+    EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+    EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+    DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+    POSTGRES_USER: forvalta
+    DEBUG: '0'
+    MFA_REQUIRED: '1'
+    TRUST_PROXY: '1'
+    SOURCE_URL: /source/forvalta-source.tar.gz
+    FILE_SCAN_COMMAND: clamdscan --stream --config-file=/etc/clamav/clamd.conf
+  restart: unless-stopped
+  depends_on: &id004
+    db:
+      condition: service_healthy
+  networks: &id003
+  - private
+services:
+  db:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: forvalta
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      APP_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PGBACKREST_REPO1_S3_BUCKET: ${PGBACKREST_REPO1_S3_BUCKET}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT}
+      PGBACKREST_REPO1_S3_REGION: ${PGBACKREST_REPO1_S3_REGION}
+      PGBACKREST_REPO1_S3_URI_STYLE: ${PGBACKREST_REPO1_S3_URI_STYLE}
+      PGBACKREST_REPO1_S3_KEY: ${PGBACKREST_REPO1_S3_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${PGBACKREST_REPO1_S3_KEY_SECRET}
+      PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS}
+      PGDATA: /var/lib/postgresql/18/docker
+    command:
+    - postgres
+    - -c
+    - wal_level=replica
+    - -c
+    - archive_mode=on
+    - -c
+    - archive_timeout=300
+    - -c
+    - archive_command=pgbackrest --stanza=forvalta archive-push %p
+    volumes:
+    - database:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U postgres -d forvalta
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+    - private
+  api:
+    build: *id001
+    environment: *id002
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: *id003
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/api/health/',headers={'Host':__import__('os').environ['ALLOWED_HOSTS'].split(',')[0],'X-Forwarded-Proto':'https'});
+        urllib.request.urlopen(r,timeout=5)
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  worker:
+    build: *id001
+    environment: *id002
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: *id003
+    command:
+    - python
+    - manage.py
+    - worker
+  scanner:
+    image: clamav/clamav:stable
+    volumes:
+    - signatures:/var/lib/clamav
+    restart: unless-stopped
+    networks:
+    - private
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+      args:
+        CADDY_CONFIG: deploy/Caddyfile.coolify
+    environment:
+      DOMAIN: :80
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+    - private
+    expose:
+    - '80'
+  migrate:
+    build: *id001
+    environment: *id002
+    restart: 'no'
+    depends_on: *id004
+    networks: *id003
+    command:
+    - sh
+    - -c
+    - python manage.py migrate --noinput && python manage.py check --deploy --fail-level
+      WARNING
+volumes:
+  database: null
+  signatures: null
+networks:
+  private: null

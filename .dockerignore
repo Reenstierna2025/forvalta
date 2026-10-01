@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+**/*.sqlite3
+**/private-media
+**/staticfiles
+.git
+backups
+**/*.tsbuildinfo
+
+**/*.log
+.DS_Store

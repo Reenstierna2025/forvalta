@@ -1,0 +1,15 @@
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+FROM alpine:3 AS source
+WORKDIR /source
+COPY . .
+RUN mkdir /archive && tar -czf /archive/forvalta-source.tar.gz .
+FROM caddy:2-alpine
+COPY --from=build /app/dist /srv
+COPY --from=source /archive /srv/source
+ARG CADDY_CONFIG=deploy/Caddyfile
+COPY ${CADDY_CONFIG} /etc/caddy/Caddyfile

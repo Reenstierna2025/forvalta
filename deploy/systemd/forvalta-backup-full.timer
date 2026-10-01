@@ -1,0 +1,6 @@
+[Timer]
+OnCalendar=Sun *-*-* 01:00:00
+Unit=forvalta-backup@full.service
+Persistent=true
+[Install]
+WantedBy=timers.target

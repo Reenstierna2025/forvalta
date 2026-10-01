@@ -1,0 +1,17 @@
+{
+  "kind": "local logical backup and restore with attachment copy",
+  "seconds": 2.23,
+  "result": {
+    "assets": 8,
+    "work": 9,
+    "documents_verified": 1,
+    "failed_jobs": 0,
+    "errors": []
+  },
+  "not_verified": [
+    "PITR",
+    "remote encrypted repository",
+    "S3 version restore",
+    "production RPO/RTO"
+  ]
+}

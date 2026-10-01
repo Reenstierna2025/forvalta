@@ -1,0 +1,8 @@
+[Unit]
+Description=Forvalta isolated restore drill
+OnFailure=forvalta-alert@%n.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/forvalta/deploy/restore-drill.py
+TimeoutStartSec=4h
+UMask=0077

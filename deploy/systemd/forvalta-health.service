@@ -1,0 +1,8 @@
+[Unit]
+Description=Forvalta backup and worker monitoring
+OnFailure=forvalta-alert@%n.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/forvalta/deploy/recovery.py health
+TimeoutStartSec=60
+UMask=0077

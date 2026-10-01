@@ -1,0 +1,13 @@
+forvalta_id,rapportfamilj,innehåll,definition,dedu_originalnamn,dedu_kategori,status
+work,Arbetsbelastning,"Arbetsorder, objekt, organisation, status, datum, utförare",Antal poster,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+overdue,Försenade arbeten,Samma som arbetsbelastning,"Förfallodatum före idag, exklusive verifierad/avbruten",Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+rounds,Tillsyn och skötsel,Arbetsorder typ rond,Status och datum,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+inspections,Besiktningar,Arbetsorder typ besiktning,Status och datum,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+budget,Underhållsbudget,"Åtgärd, år, mängd, pris, faktor, index, finansiering","Decimal, öresavrundning half-up per åtgärd",Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+maintenance,Underhållsplan,Samma grundunderlag som budget,Återkommande åtgärder inom vald period,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+assets,Fastighetsregister,"Objekt, typ, organisation, adress, area",Varje objekt en gång; saknad area null,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+energy,Energi och mätvärden,"Mätare, datum, värde, förbrukning, enhet, byte",Differens inklusive gamla/nya mätaren,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+keys,Nyckelutlåning,"Nyckel, objekt, låntagare, förfallo-/returdatum",Aktiva lån,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+registry,Planer och kontroller,"Typade registerposter, datum, ansvar",Antal,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+nki,Registrerade kundbetyg,Poäng 0–10,Enkelt medelvärde; inte verifierad DeDu-NKI,Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad
+invoices,Fakturaunderlag,Tid/material/kostnad per arbetsorder,"Mängd × pris, öresavrundning",Ej fastställt i denna leverans,Ej fastställt,Implementerad familj; DeDu-ekvivalens ej verifierad

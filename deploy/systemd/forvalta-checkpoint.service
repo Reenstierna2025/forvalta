@@ -1,0 +1,9 @@
+[Unit]
+Description=Forvalta coordinated database and document backup
+OnFailure=forvalta-alert@%n.service
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/forvalta
+ExecStart=/usr/bin/python3 /opt/forvalta/deploy/recovery.py checkpoint
+TimeoutStartSec=10min
+UMask=0077

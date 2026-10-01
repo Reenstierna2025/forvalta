@@ -1,0 +1,27 @@
+{
+    servers {
+        trusted_proxies static private_ranges
+        trusted_proxies_strict
+    }
+}
+# Reachable only via Coolify's proxy network; never publish this port on the host.
+:80 {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    }
+    request_body { max_size 25MB }
+    handle /api/* {
+        reverse_proxy api:8000 {
+            header_up X-Real-IP {client_ip}
+        }
+    }
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}

@@ -1,0 +1,8 @@
+[Unit]
+Description=Forvalta database backup (%i)
+OnFailure=forvalta-alert@%n.service
+[Service]
+Type=oneshot
+ExecStart=/opt/forvalta/deploy/backup.sh %i
+TimeoutStartSec=3h
+UMask=0077

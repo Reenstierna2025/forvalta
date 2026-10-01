@@ -1,0 +1,41 @@
+# Used only by restore-drill.py with a unique throwaway project name.
+services:
+  db:
+    image: ${DRILL_DB_IMAGE}
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+      PGBACKREST_REPO1_S3_BUCKET: ${PGBACKREST_REPO1_S3_BUCKET}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT}
+      PGBACKREST_REPO1_S3_REGION: ${PGBACKREST_REPO1_S3_REGION}
+      PGBACKREST_REPO1_S3_URI_STYLE: ${PGBACKREST_REPO1_S3_URI_STYLE}
+      PGBACKREST_REPO1_S3_KEY: ${PGBACKREST_REPO1_S3_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${PGBACKREST_REPO1_S3_KEY_SECRET}
+      PGBACKREST_REPO1_CIPHER_PASS: ${PGBACKREST_REPO1_CIPHER_PASS}
+    command: [postgres, -c, archive_mode=off]
+    volumes: [database:/var/lib/postgresql]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d forvalta']
+      interval: 5s
+      timeout: 3s
+      retries: 120
+  api:
+    image: ${DRILL_API_IMAGE}
+    environment:
+      DEBUG: '1'
+      SECRET_KEY: isolated-restore-drill-only
+      MFA_REQUIRED: '0'
+      POSTGRES_HOST: db
+      POSTGRES_DB: forvalta
+      POSTGRES_USER: forvalta
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PRIVATE_MEDIA_ROOT: /restore/media
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION}
+      BACKUP_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID}
+      BACKUP_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY}
+    volumes: [attachments:/restore]
+volumes:
+  database:
+  attachments:

@@ -1,0 +1,6 @@
+[Timer]
+OnCalendar=Mon..Sat *-*-* 01:00:00
+Unit=forvalta-backup@diff.service
+Persistent=true
+[Install]
+WantedBy=timers.target

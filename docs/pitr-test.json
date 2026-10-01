@@ -1,0 +1,20 @@
+{
+  "test": "isolated native PostgreSQL PITR, encrypted WAL/base backup and attachment bundle",
+  "status": "ok",
+  "integrity": {
+    "assets": 1,
+    "work": 0,
+    "documents_verified": 2,
+    "failed_jobs": 0,
+    "errors": []
+  },
+  "post_checkpoint_record_absent": true,
+  "post_base_attachment_recovered": true,
+  "encrypted_base_and_wal": true,
+  "restore_seconds": 2.29,
+  "total_test_seconds": 13.95,
+  "not_verified": [
+    "production Docker/pgBackRest/S3",
+    "production volume and RPO/RTO"
+  ]
+}

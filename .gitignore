@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.sqlite3
+private-media/
+node_modules/
+dist/
+.coverage
+*.log
+.DS_Store
+backups/
+**/staticfiles/
+*.tsbuildinfo

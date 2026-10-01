@@ -1,0 +1,7 @@
+[Unit]
+Description=Forvalta operational alert (%i)
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/forvalta-alert.env
+ExecStart=/usr/bin/python3 /opt/forvalta/deploy/notify-ops.py %i
+UMask=0077

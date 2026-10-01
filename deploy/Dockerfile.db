@@ -1,0 +1,5 @@
+FROM postgres:18
+RUN apt-get update && apt-get install -y --no-install-recommends pgbackrest && rm -rf /var/lib/apt/lists/*
+COPY deploy/pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
+
+COPY deploy/init-db.sh /docker-entrypoint-initdb.d/init-db.sh
