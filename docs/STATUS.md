@@ -1,4 +1,4 @@
-# Leveransstatus 0.6
+# Leveransstatus 0.6.1
 
 Detta är en implementerad utvecklingspilot med databas och fungerande kärnflöden. Den uppfyller delar av etapp 1 och 2, samt grundregister från etapp 3. Etapperna är inte slutgodkända.
 
@@ -18,7 +18,7 @@ Detta är en implementerad utvecklingspilot med databas och fungerande kärnflö
 | Rapporter | Tolv rapportfamiljer, kolumner, mallar, PDF/XLSX/CSV, arkiv, schemalagda skyddade länkar, godkända grupperingar/mått och klickbara staplar | Fler mått/diagram, ID-baserad gruppering, korsgruppering och alla verifierade DeDu-varianter |
 | Dokument | Privata objekt, versionskedja, SHA-256, 20 MB, filvalidering, antiviruskoppling | Verifierad produktions-S3 och fjärrbackup, retention och återställning på målmiljön |
 | AI-assistent | Krypterad leverantörsnyckel, arbetsorderunderlag, anropsgräns, källförteckning, godkända prioriteringsförslag | Verkligt leverantörsprov, fler adapterformat, budget/dokument/andra ändringar, retention och kvalitetsutvärdering |
-| Drift | Compose, HTTPS, pgBackRest/WAL, krypterad dokument-/konfigurationsbackup, övervakningsskript, timers och isolerad återställningsövning | Körda containerbyggen, faktisk server/S3, aktiverade timers, extern larmmottagare och full katastrofövning |
+| Drift | Compose, HTTPS, pgBackRest/WAL, krypterad dokument-/konfigurationsbackup, övervakningsskript, timers och isolerad återställningsövning | Faktisk S3 och tjänstest på målservern, aktiverade timers, extern larmmottagare och full katastrofövning |
 
 ## Rapporttäckning
 
@@ -39,4 +39,4 @@ Piloten kan granskas lokalt nu. Det är inte ett godkännande att använda verkl
 
 ## Besiktningsleverans 0.6
 
-Se [besiktningsflödet](INSPECTIONS.md). Protokollen och anmärkningarna ingår i fullständig dataexport. Server- och Stratoanslutning har inte verifierats; inget har driftsatts externt.
+Se [besiktningsflödet](INSPECTIONS.md). Protokollen och anmärkningarna ingår i fullständig dataexport. Åtkomsten till Coolify, OVH och Strato har verifierats. Ett separat installationsutkast är förberett i Coolify. Ingen extern tjänst är startad; domän, S3, SMTP, backup och återställningsprov återstår. Containerbyggen och produktionsstart med begränsat databaskonto har klarat CI.

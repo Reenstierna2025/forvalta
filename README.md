@@ -2,7 +2,7 @@
 
 Öppen fastighetsförvaltning för Svenska kyrkans organisationsstruktur. React/TypeScript, Django och PostgreSQL med privata dokument. Licens: **AGPL-3.0-only**.
 
-**Version 0.6 – fungerande utvecklingspilot. Inte en färdig DeDu-ersättare eller produktionsgodkänd leverans.** Kärnflöden går att prova med syntetiska data. Den fullständiga fyrastegsplanen är inte färdig; faktisk täckning och kvarvarande arbete finns i [leveransstatus](docs/STATUS.md).
+**Version 0.6.1 – fungerande utvecklingspilot. Inte en färdig DeDu-ersättare eller produktionsgodkänd leverans.** Kärnflöden går att prova med syntetiska data. Den fullständiga fyrastegsplanen är inte färdig; faktisk täckning och kvarvarande arbete finns i [leveransstatus](docs/STATUS.md).
 
 ## Prova
 
@@ -86,3 +86,5 @@ npm run build
 ## Källkod och licens
 
 Se [LICENSE](LICENSE). Produktionsbygget skapar automatiskt `/source/forvalta-source.tar.gz` av den aktuella källkoden och visar länken i tjänstens sidfot. Installationsanvisningarna ingår. Källkodsarkivet får inte innehålla privata data eller `.env`. Granska tillägg och beroenden innan publicering. AGPL avser programvaran; den öppnar inte verksamhetens data.
+
+Installation med befintlig Coolify-proxy beskrivs i [Coolify-guiden](docs/COOLIFY.md).
